@@ -152,11 +152,8 @@ while True:
 		if minDistance < tolerance:
 			idx = np.where(distances == minDistance)[0][0]
 			name = data["names"][idx]
-		else:
-			name = "unknown"
-
-		# update the list of names
-		names.append(name)
+			# Only update names on identified face
+			names.append(name)		
 
 	# loop over the recognized faces
 	for ((top, right, bottom, left), name) in zip(boxes, names):
