@@ -11,10 +11,40 @@ import pickle
 import time
 import cv2
 import json
+import select
 import sys
 import signal
+import threading
 import os
 import numpy as np
+
+
+# Class for holding a thread safe command on whether to run face recognition or not
+class RunFaceRecoCommand:
+	def __init__(self):
+		self._command_state = False
+		self._lock = threading.Lock()
+	
+	def set_command_state(self,state):
+		self._lock.acquire()
+		self._command_state = state
+		self._lock.release()
+
+	def get_command_state(self):
+		return self._command_state
+
+# Function to monitor stdin input for command
+def monitor_stdin_for_command(cmd):
+    while True:
+        if select.select([sys.stdin], [], [],10)[0]:
+            print('Input is ready...')
+            line = sys.stdin.readline()
+            print('Read in: ',line)
+
+            if 'start' in line:
+                cmd.set_command_state(True)
+            elif 'stop' in line:
+                cmd.set_command_state(False)
 
 # To properly pass JSON.stringify()ed bool command line parameters, e.g. "--extendDataset"
 # See: https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
@@ -103,8 +133,30 @@ tolerance = float(args["tolerance"])
 # start the FPS counter
 fps = FPS().start()
 
+# Create and start a thread fo monitoring stdin input for commands
+cmd = RunFaceRecoCommand()
+run_face_reco = False
+stdin_cmd_thread = threading.Thread(target=monitor_stdin_for_command, args=(cmd,), daemon=True)
+stdin_cmd_thread.start()
+
 # loop over frames from the video file stream
 while True:
+	# Check whether face recognition should be running
+	if cmd.get_command_state() and run_face_reco == False:
+		run_face_reco = True
+	elif cmd.get_command_state() == False and run_face_reco == True:
+		run_face_reco = False
+		# Logout all users if any were logged in, and clear the prevNames list
+		if prevNames:
+			printjson("logout", {
+				"names": prevNames
+			})
+			prevNames.clear()
+		continue
+	elif run_face_reco == False:
+		# Do nothing while run_face_reco is false
+		continue
+
 	# grab the frame from the threaded video stream and resize it
 	# to 500px (to speedup processing)
 	originalFrame = vs.read()
@@ -152,7 +204,7 @@ while True:
 		if minDistance < tolerance:
 			idx = np.where(distances == minDistance)[0][0]
 			name = data["names"][idx]
-			# Only update names on identified face
+			# Only update names array for known users
 			names.append(name)		
 
 	# loop over the recognized faces

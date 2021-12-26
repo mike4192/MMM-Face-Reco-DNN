@@ -96,6 +96,10 @@ module.exports = NodeHelper.create({
     });
   },
 
+  send_python_cmd: function(cmd) {
+    this.pyshell.send(cmd);
+  },
+
   python_stop: function() {
     this.destroy();
   },
@@ -116,11 +120,13 @@ module.exports = NodeHelper.create({
         this.python_start();
       }
     }
-    if (notification === 'USER_PRESENCE') {
+    if (notification === 'MONITOR_ACTIVE') {
       if (payload === true) {
-        console.log(['[' + this.name + '] ' + 'Got true user presence']);
+        console.log('[' + this.name + '] ' + 'Got notice that monitor is now on');
+        this.send_python_cmd('start');
       } else if (payload === false) {
-        console.log(['[' + this.name + '] ' + 'Got false user presence']);
+        console.log('[' + this.name + '] ' + 'Got notice that monitor is now off');
+        send_python_cmd('stop');
       }
     }
   },
