@@ -35,16 +35,19 @@ class RunFaceRecoCommand:
 
 # Function to monitor stdin input for command
 def monitor_stdin_for_command(cmd):
-    while True:
-        if select.select([sys.stdin], [], [],10)[0]:
-            print('Input is ready...')
-            line = sys.stdin.readline()
-            print('Read in: ',line)
+	while True:
+		if select.select([sys.stdin], [], [],10)[0]:
+			print('Input is ready...')
+			line = sys.stdin.readline()
+			print('Read in: ',line)
 
-            if 'start' in line:
-                cmd.set_command_state(True)
-            elif 'stop' in line:
-                cmd.set_command_state(False)
+			if 'start' in line:
+				cmd.set_command_state(True)
+			elif 'stop' in line:
+				cmd.set_command_state(False)
+			elif 'exit' in line:
+				cmd.set_command_state(None)
+				break
 
 # To properly pass JSON.stringify()ed bool command line parameters, e.g. "--extendDataset"
 # See: https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
@@ -142,7 +145,9 @@ stdin_cmd_thread.start()
 # loop over frames from the video file stream
 while True:
 	# Check whether face recognition should be running
-	if cmd.get_command_state() and run_face_reco == False:
+	if cmd.get_command_state() == None:
+		break
+	elif cmd.get_command_state() and run_face_reco == False:
 		run_face_reco = True
 	elif cmd.get_command_state() == False and run_face_reco == True:
 		run_face_reco = False

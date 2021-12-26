@@ -101,6 +101,7 @@ module.exports = NodeHelper.create({
   },
 
   python_stop: function() {
+    this.pyshell.send('exit');
     this.destroy();
   },
 
