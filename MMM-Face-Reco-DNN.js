@@ -464,5 +464,17 @@ Module.register('MMM-Face-Reco-DNN', {
       Log.log(this.name + ' get logged in users ' + this.users);
       this.sendNotification('LOGGED_IN_USERS', this.users);
     }
+
+    // Only do face recognition on user presence from MMM-PIR-Sensor
+    if (notification === 'USER_PRESENCE') {
+      if (payload === true) {
+        Log.log(this.name + ' got notification from MMM-PIR-Sensor of user presence');
+        this.sendSocketNotification('USER_PRESENCE', true);
+      } else if (payload === false) {
+        Log.log(this.name + ' got notification from MMM-PIR-Sensor of no user presence');
+        this.sendSocketNotification('USER_PRESENCE', false);
+      }
+
+    }
   },
 });
