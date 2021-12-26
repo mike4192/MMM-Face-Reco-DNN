@@ -116,6 +116,13 @@ module.exports = NodeHelper.create({
         this.python_start();
       }
     }
+    if (notification === 'USER_PRESENCE') {
+      if (payload === true) {
+        console.log(['[' + this.name + '] ' + 'Got true user presence']);
+      } else if (payload === false) {
+        console.log(['[' + this.name + '] ' + 'Got false user presence']);
+      }
+    }
   },
 
   stop: function() {
