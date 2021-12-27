@@ -13,7 +13,7 @@ var pythonStarted = false;
 
 module.exports = NodeHelper.create({
   pyshell: null,
-  python_start: function() {
+  python_start: function () {
     const self = this;
     const extendedDataset = this.config.extendDataset ? 'True' : 'False';
     const options = {
@@ -47,7 +47,7 @@ module.exports = NodeHelper.create({
     );
 
     // check if a message of the python script is comming in
-    self.pyshell.on('message', function(message) {
+    self.pyshell.on('message', function (message) {
       // A status message has received and will log
       if (message.hasOwnProperty('status')) {
         console.log('[' + self.name + '] ' + message.status);
@@ -57,11 +57,11 @@ module.exports = NodeHelper.create({
       if (message.hasOwnProperty('login')) {
         console.log(
           '[' +
-            self.name +
-            '] ' +
-            'Users ' +
-            message.login.names.join(' - ') +
-            ' logged in.'
+          self.name +
+          '] ' +
+          'Users ' +
+          message.login.names.join(' - ') +
+          ' logged in.'
         );
         self.sendSocketNotification('user', {
           action: 'login',
@@ -73,11 +73,11 @@ module.exports = NodeHelper.create({
       if (message.hasOwnProperty('logout')) {
         console.log(
           '[' +
-            self.name +
-            '] ' +
-            'Users ' +
-            message.logout.names.join(' - ') +
-            ' logged out.'
+          self.name +
+          '] ' +
+          'Users ' +
+          message.logout.names.join(' - ') +
+          ' logged out.'
         );
         self.sendSocketNotification('user', {
           action: 'logout',
@@ -86,33 +86,31 @@ module.exports = NodeHelper.create({
       }
     });
 
-    
-
-    onExit(function(code, signal) {
+    onExit(function (code, signal) {
       self.destroy();
     });
   },
 
-  send_python_cmd: function(cmd) {
+  send_python_cmd: function (cmd) {
     this.pyshell.send(cmd);
   },
 
-  python_stop: function() {
+  python_stop: function () {
     this.pyshell.send('exit');
     // Shutdown node helper
-    this.pyshell.end(function(err) {
+    this.pyshell.end(function (err) {
       if (err) throw err;
       console.log('[' + self.name + '] ' + 'finished running...');
     });
     this.destroy();
   },
 
-  destroy: function() {
+  destroy: function () {
     console.log('[' + this.name + '] ' + 'Terminate python');
     this.pyshell.childProcess.kill();
   },
 
-  socketNotificationReceived: function(notification, payload) {
+  socketNotificationReceived: function (notification, payload) {
     // Configuration are received
     if (notification === 'CONFIG') {
       this.config = payload;
@@ -132,7 +130,7 @@ module.exports = NodeHelper.create({
     }
   },
 
-  stop: function() {
+  stop: function () {
     pythonStarted = false;
     this.python_stop();
   },

@@ -161,7 +161,7 @@ while True:
         printjson("status", "Starting face recognition")
     elif cmd.get_command_state() == False and run_face_reco == True:
         run_face_reco = False
-        printjson("status","Stopping face recognition")
+        printjson("status", "Stopping face recognition")
         # Logout all users if any were logged in, and clear the prevNames list
         if prevNames:
             printjson("logout", {
