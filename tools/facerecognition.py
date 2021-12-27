@@ -40,15 +40,14 @@ def monitor_stdin_for_command(cmd):
     while True:
         if select.select([sys.stdin], [], [], 10)[0]:
             line = sys.stdin.readline()
-            printjson("status", "Got stdin input: {}".format(line))
-            if not len(line):
-                if 'start' in line:
-                    cmd.set_command_state(True)
-                elif 'stop' in line:
-                    cmd.set_command_state(False)
-                elif 'exit' in line:
-                    cmd.set_command_state(None)
-                    break
+            printjson("status", "Got stdin input: " + line)
+            if 'start' in line:
+                cmd.set_command_state(True)
+            elif 'stop' in line:
+                cmd.set_command_state(False)
+            elif 'exit' in line:
+                cmd.set_command_state(None)
+                break
 
 # To properly pass JSON.stringify()ed bool command line parameters, e.g. "--extendDataset"
 # See: https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
@@ -168,9 +167,13 @@ while True:
                 "names": prevNames
             })
             prevNames.clear()
+
+        time.sleep(args["interval"] / 1000)
         continue
     elif run_face_reco == False:
         # Do nothing while run_face_reco is false
+        printjson("status","Not running face recog because disabled")
+        time.sleep(args["interval"] / 1000)
         continue
 
     # grab the frame from the threaded video stream and resize it
@@ -277,7 +280,6 @@ while True:
     # if the `q` key was pressed, break from the loop
     if key == ord("q") or closeSafe == True:
         break
-
     time.sleep(args["interval"] / 1000)
 
 # stop the timer and display FPS information
