@@ -18,6 +18,7 @@ module.exports = NodeHelper.create({
     const extendedDataset = this.config.extendDataset ? 'True' : 'False';
     const options = {
       mode: 'json',
+      pythonOptions: ['-u'],
       stderrParser: line => JSON.stringify(line),
       args: [
         '--cascade=' + this.config.cascade,
@@ -85,11 +86,11 @@ module.exports = NodeHelper.create({
       }
     });
 
-    // Shutdown node helper
-    self.pyshell.end(function(err) {
-      if (err) throw err;
-      console.log('[' + self.name + '] ' + 'finished running...');
-    });
+    // // Shutdown node helper
+    // self.pyshell.end(function(err) {
+    //   if (err) throw err;
+    //   console.log('[' + self.name + '] ' + 'finished running...');
+    // });
 
     onExit(function(code, signal) {
       self.destroy();
