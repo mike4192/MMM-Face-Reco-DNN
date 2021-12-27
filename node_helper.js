@@ -127,7 +127,7 @@ module.exports = NodeHelper.create({
         this.send_python_cmd('start');
       } else if (payload === false) {
         console.log('[' + this.name + '] ' + 'Got notice that monitor is now off');
-        send_python_cmd('stop');
+        this.send_python_cmd('stop');
       }
     }
   },
