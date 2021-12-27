@@ -40,12 +40,12 @@ def monitor_stdin_for_command(cmd):
     while True:
         if select.select([sys.stdin], [], [], 10)[0]:
             line = sys.stdin.readline()
-            printjson("status", "Got stdin input: " + line)
             if 'start' in line:
                 cmd.set_command_state(True)
             elif 'stop' in line:
                 cmd.set_command_state(False)
-            elif 'exit' in line:
+            elif 'exit' in line or line == '':
+                # If exit or EOF sent, set command to end program, and break loop
                 cmd.set_command_state(None)
                 break
 
@@ -142,25 +142,26 @@ tolerance = float(args["tolerance"])
 fps = FPS().start()
 
 # Create and start a thread fo monitoring stdin input for commands
-printjson("status", "about to start stdin monitoring thread")
+printjson("status", "Starting stdin monitoring thread...")
 cmd = RunFaceRecoCommand()
 run_face_reco = False
 stdin_cmd_thread = threading.Thread(
     target=monitor_stdin_for_command, args=(cmd,), daemon=True)
 stdin_cmd_thread.start()
-printjson("status", "started stdin monitoring thread")
+printjson("status", "Stdin monitoring thread started!")
 
 # loop over frames from the video file stream
 while True:
     # Check whether face recognition should be running
     if cmd.get_command_state() == None:
+        printjson("status", "Got exit command, stopping program...")
         break
     elif cmd.get_command_state() and run_face_reco == False:
         run_face_reco = True
-        printjson("status", "starting face recog")
+        printjson("status", "Starting face recognition")
     elif cmd.get_command_state() == False and run_face_reco == True:
         run_face_reco = False
-        printjson("status","stopping face recog")
+        printjson("status","Stopping face recognition")
         # Logout all users if any were logged in, and clear the prevNames list
         if prevNames:
             printjson("logout", {
@@ -172,7 +173,6 @@ while True:
         continue
     elif run_face_reco == False:
         # Do nothing while run_face_reco is false
-        printjson("status","Not running face recog because disabled")
         time.sleep(args["interval"] / 1000)
         continue
 

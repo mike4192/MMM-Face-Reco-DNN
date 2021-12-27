@@ -86,11 +86,7 @@ module.exports = NodeHelper.create({
       }
     });
 
-    // // Shutdown node helper
-    // self.pyshell.end(function(err) {
-    //   if (err) throw err;
-    //   console.log('[' + self.name + '] ' + 'finished running...');
-    // });
+    
 
     onExit(function(code, signal) {
       self.destroy();
@@ -103,6 +99,11 @@ module.exports = NodeHelper.create({
 
   python_stop: function() {
     this.pyshell.send('exit');
+    // Shutdown node helper
+    this.pyshell.end(function(err) {
+      if (err) throw err;
+      console.log('[' + self.name + '] ' + 'finished running...');
+    });
     this.destroy();
   },
 
@@ -124,10 +125,8 @@ module.exports = NodeHelper.create({
     }
     if (notification === 'MONITOR_ACTIVE') {
       if (payload === true) {
-        console.log('[' + this.name + '] ' + 'Got notice that monitor is now on');
         this.send_python_cmd('start');
       } else if (payload === false) {
-        console.log('[' + this.name + '] ' + 'Got notice that monitor is now off');
         this.send_python_cmd('stop');
       }
     }
