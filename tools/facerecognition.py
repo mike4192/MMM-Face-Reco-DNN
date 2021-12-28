@@ -22,7 +22,7 @@ import numpy as np
 # Class for holding a thread safe command on whether to run face recognition or not
 class RunFaceRecoCommand:
     def __init__(self):
-        self._command_state = False
+        self._command_state = True
         self._lock = threading.Lock()
 
     def set_command_state(self, state):
