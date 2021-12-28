@@ -144,7 +144,7 @@ fps = FPS().start()
 # Create and start a thread fo monitoring stdin input for commands
 printjson("status", "Starting stdin monitoring thread...")
 cmd = RunFaceRecoCommand()
-run_face_reco = False
+run_face_reco = True
 stdin_cmd_thread = threading.Thread(
     target=monitor_stdin_for_command, args=(cmd,), daemon=True)
 stdin_cmd_thread.start()
