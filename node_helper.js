@@ -13,6 +13,7 @@ const NodeHelper = require('node_helper');
 const { PythonShell } = require('python-shell');
 const onExit = require('signal-exit');
 var pythonStarted = false;
+const startTime = Date.now(); // Maybe use to delay first fetch
 
 module.exports = NodeHelper.create({
   pyshell: null,
@@ -38,6 +39,7 @@ module.exports = NodeHelper.create({
         '--contrast=' + this.config.contrast,
         '--resolution=' + this.config.resolution,
         '--processWidth=' + this.config.processWidth,
+        '--run-only-on-notification=' + (this.config.external_trigger_notification !== '' ? '1' : '0'),
       ],
     };
 
@@ -112,6 +114,44 @@ module.exports = NodeHelper.create({
         this.python_start();
       }
     }
+
+    // delay to allow python module and flask server to start before trying to send post
+    if (notification === this.config.external_trigger_notification && pythonStarted && ((Date.now() - startTime) > 10000)) {
+      console.log("Got external notification trigger node_helper");
+        fetch("http://localhost:5000/trigger", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ trigger: payload })
+        });
+    }
+    // if (notification === this.config.external_trigger_notification) {
+    //   console.log("Got external notification trigger node_helper");
+
+    //     fetch("http://localhost:5000/trigger", {
+    //       method: "POST",
+    //       headers: {
+    //           "Content-Type": "application/json"
+    //       },
+    //       body: JSON.stringify({ trigger: payload })
+    //     })
+    //     .then(response => {
+    //       if (!response.ok) {
+    //           throw new Error("Network response was not ok");
+    //       }
+    //       return response.json();
+    //     })
+    //     .then(data => {
+    //         console.log("Successfully sent trigger to recognition.py", data);
+    //     })
+    //     .catch(error => {
+    //         console.error('A fetch error on Magic Mirror startup from MMM-Face-Reco-DNN may be expected if an ',
+    //                       'external trigger notification is received before the python recognition.py starts. ',
+    //                       'This can be ignored but subsequent fetch errors should not.');
+    //         console.error("Fetch error:", error);
+    //     });
+    // }
   },
 
   stop: function () {

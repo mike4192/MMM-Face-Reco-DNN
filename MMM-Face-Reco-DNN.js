@@ -71,6 +71,9 @@ Module.register('MMM-Face-Reco-DNN', {
     outputmm: 0,
     // turn on extra debugging 0=no, 1=yes
     debug: 0,
+    // Name of external notification. If specifeid (i.e. non-empty string), face recognition will only run 
+    // upon receving a notification with a True payload, and stop if received with a False payload
+    external_trigger_notification: '',
   },
 
   timouts: {},
@@ -465,6 +468,14 @@ Module.register('MMM-Face-Reco-DNN', {
     if (notification === 'GET_LOGGED_IN_USERS') {
       Log.log(this.name + ' get logged in users ' + this.users);
       this.sendNotification('LOGGED_IN_USERS', this.users);
+    }
+
+    // If an external trigger notification name is specified, forward
+    // notification payload received on that notification name.
+    if (this.config.external_trigger_notification !== "" &&
+        notification === this.config.external_trigger_notification) {
+      this.sendSocketNotification(notification, payload);
+      Log.log("Got external notification trigger MMM-Face-Reco-DNN");
     }
   },
 
