@@ -22,6 +22,7 @@ module.exports = NodeHelper.create({
     const extendedDataset = this.config.extendDataset ? 'True' : 'False';
     const options = {
       mode: 'json',
+      pythonOptions: ['-u'], // Immediately flush buffer for std out/in monitoring/writing to work
       stderrParser: line => JSON.stringify(line),
       args: [
         '--cascade=' + this.config.cascade,
@@ -83,15 +84,13 @@ module.exports = NodeHelper.create({
       }
     });
 
-    // Shutdown node helper
-    self.pyshell.end(function (err) {
-      if (err) throw err;
-      console.log('[' + self.name + '] ' + 'finished running...');
-    });
-
     onExit(function (_code, _signal) {
       self.destroy();
     });
+  },
+
+  send_python_cmd: function (cmd) {
+    this.pyshell.send(cmd);
   },
 
   python_stop: function () {
@@ -99,6 +98,12 @@ module.exports = NodeHelper.create({
   },
 
   destroy: function () {
+    const self = this
+    this.pyshell.end(function (err) {
+      if (err) throw err;
+      console.log('[' + self.name + '] ' + 'finished running...');
+    });
+
     console.log('[' + this.name + '] ' + 'Terminate python');
     this.pyshell.childProcess.kill();
   },
@@ -116,42 +121,13 @@ module.exports = NodeHelper.create({
     }
 
     // delay to allow python module and flask server to start before trying to send post
-    if (notification === this.config.external_trigger_notification && pythonStarted && ((Date.now() - startTime) > 10000)) {
-      console.log("Got external notification trigger node_helper");
-        fetch("http://localhost:5000/trigger", {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ trigger: payload })
-        });
+    if (notification === this.config.external_trigger_notification && pythonStarted) {
+      if (payload === true) {
+        this.send_python_cmd('start');
+      } else {
+        this.send_python_cmd('stop');
+      }
     }
-    // if (notification === this.config.external_trigger_notification) {
-    //   console.log("Got external notification trigger node_helper");
-
-    //     fetch("http://localhost:5000/trigger", {
-    //       method: "POST",
-    //       headers: {
-    //           "Content-Type": "application/json"
-    //       },
-    //       body: JSON.stringify({ trigger: payload })
-    //     })
-    //     .then(response => {
-    //       if (!response.ok) {
-    //           throw new Error("Network response was not ok");
-    //       }
-    //       return response.json();
-    //     })
-    //     .then(data => {
-    //         console.log("Successfully sent trigger to recognition.py", data);
-    //     })
-    //     .catch(error => {
-    //         console.error('A fetch error on Magic Mirror startup from MMM-Face-Reco-DNN may be expected if an ',
-    //                       'external trigger notification is received before the python recognition.py starts. ',
-    //                       'This can be ignored but subsequent fetch errors should not.');
-    //         console.error("Fetch error:", error);
-    //     });
-    // }
   },
 
   stop: function () {

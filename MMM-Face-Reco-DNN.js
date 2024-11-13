@@ -475,7 +475,6 @@ Module.register('MMM-Face-Reco-DNN', {
     if (this.config.external_trigger_notification !== "" &&
         notification === this.config.external_trigger_notification) {
       this.sendSocketNotification(notification, payload);
-      Log.log("Got external notification trigger MMM-Face-Reco-DNN");
     }
   },
 

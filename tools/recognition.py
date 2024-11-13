@@ -1,7 +1,6 @@
 import base64
 import cv2
 import face_recognition
-import logging
 import numpy
 import os
 import pickle
@@ -10,7 +9,6 @@ import sys
 import threading
 import time
 from datetime import datetime
-from flask import Flask, request, jsonify
 from utils.image import Image
 from utils.arguments import Arguments
 from utils.print import Print
@@ -20,41 +18,34 @@ def signalHandler(signal, frame):
     global closeSafe
     closeSafe = True
 
-# Disables flask module logging
-cli = sys.modules['flask.cli']
-cli.show_server_banner = lambda *x: None
-log = logging.getLogger('werkzeug')
-log.setLevel(logging.ERROR)  # Only log errors and critical issues
+signal.signal(signal.SIGINT, signalHandler)
+signal.signal(signal.SIGTERM, signalHandler)
+closeSafe = False
 
-# Setup Flask server to receive http POST and trigger callback to
-# run face recognition only on external trigger, if set by config option
-app = Flask(__name__)
 external_trigger = True # Default to true to start recognition on startup
 
-@app.route('/trigger', methods=['POST'])
-def trigger():
+def monitor_stdin_for_command():
+    """
+    Function for monitoring std input for commands to start or stop face recognition.
+
+    Note: Avoid putting print statements in this function, as will run asynchronously in 
+    a thread. Print statements could get weaved with other print statements, which could
+    break the parent Magic Mirror processes processing of std output. 
+    """
     global external_trigger
-    data = request.json
-    external_trigger = data.get("trigger", False)
-    Print.printJson("status", f"Received external face recognition trigger with payload: {external_trigger}")
-    return jsonify({"message": "Success"}), 200
-
-def start_listener():
-    app.run(port=5000) # Arbitrary port number
-
-
-signal.signal(signal.SIGINT, signalHandler)
-closeSafe = False
+    while True:
+        line = sys.stdin.readline()
+        if 'start' in line:
+            external_trigger = True
+        elif 'stop' in line:
+            external_trigger = False
+        elif 'exit' in line or line == '':
+            # If exit or EOF sent, break loop
+            external_trigger = False
+            break
 
 # prepare console arguments
 Arguments.prepareRecognitionArguments()
-
-# If triggering face recognition on external notification, start
-# listener thread for that external trigger
-if Arguments.get("run_only_on_notification"):
-    listener_thread = threading.Thread(target=start_listener)
-    listener_thread.daemon = True
-    listener_thread.start()
 
 # load the known faces and embeddings along with OpenCV's Haar
 # cascade for face detection
@@ -91,7 +82,16 @@ tolerance = float(Arguments.get("tolerance"))
 # Default to running face recognition
 run_face_recognition = True
 
+# If triggering face recognition on external notification, start
+# listener thread for that external trigger
+if Arguments.get("run_only_on_notification"):
+    stdin_monitoring_thread = threading.Thread(target=monitor_stdin_for_command, daemon=True)
+    stdin_monitoring_thread.start()
+    Print.printJson("status", "Started stdin monitoring thread for triggering face recognition.")
+
+
 # loop over frames from the video file stream
+Print.printJson("status", "Starting face recognition loop.")
 while True:
     loop_start_time = time.time()
     
@@ -100,11 +100,14 @@ while True:
             # Externally triggered to run face recognition
             Print.printJson("status", "Starting face recognition.")
             run_face_recognition = True
+            picam2.start()
 
         elif run_face_recognition == True and external_trigger == False:
             # Externally triggered to stop face recognition.
             Print.printJson("status", "Stopping face recognition and logging out any logged in users.")
             run_face_recognition = False
+            picam2.stop()
+            
             # Log out any users that were logged in, and clear prevNames list
             if prevNames:
                 Print.printJson("logout", {"names": prevNames})
@@ -113,7 +116,7 @@ while True:
     if run_face_recognition:
         # read the frame
         originalFrame = picam2.capture_array()
-        
+
         # adjust image brightness and contrast
         originalFrame = Image.adjust_brightness_contrast(
             originalFrame, Arguments.get("brightness"), Arguments.get("contrast")
