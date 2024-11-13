@@ -1,3 +1,10 @@
+# 2.0.2 (2024-11-12)
+- Added feature to conditionally trigger face recognition to start and stop via a Magic Mirror notification. Use of this feature is optional. Use for example with MMM-Pir to turn off face recognition when monitor is off.
+  - Achieved by having node_helper send a command to the python child process via its std input upon receiving an external notfication. Python process asynchronously monitors its std input. 
+  - CPU utilization of python rpocess (and RPi power consumption) is almost completely eliminated when face recognition is paused
+- Added SIGTERM signal handling to recognition.py so python process reliably stops when Magic Mirror application is terminated
+- Improved recognition.py loop timing so the target interval as specified by `checkInterval` is better tracked
+
 # 2.0.1 (2023-11-01)
 
 - After a lot of install issues. We removed `pipenv` again and changed the install-instructions

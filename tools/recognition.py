@@ -242,10 +242,9 @@ while True:
     if key == ord("q") or closeSafe == True:
         break
     
-    # Calculate how long the loop was thus far. If loop time was less than 
-    # the specified interval, sleep more to meet that interval
-    loop_time = time.time() - loop_start_time 
-    # Print.printJson("status",f"loop time: {loop_time:.2f}, sleeping additional {max(0.0, Arguments.get('interval') / 1000 - loop_time)} sec")
+    # Calculate how long the loop was thus far. If loop time is less than 
+    # the specified interval, sleep more to meet the targeted interval
+    loop_time = time.time() - loop_start_time
     time.sleep(max(0.0, Arguments.get("interval") / 1000 - loop_time))
 
 

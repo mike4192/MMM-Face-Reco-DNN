@@ -71,8 +71,11 @@ Module.register('MMM-Face-Reco-DNN', {
     outputmm: 0,
     // turn on extra debugging 0=no, 1=yes
     debug: 0,
-    // Name of external notification. If specifeid (i.e. non-empty string), face recognition will only run 
-    // upon receving a notification with a True payload, and stop if received with a False payload
+    // If specified, conditionally run face recognition when a notification with a name as specified by this 
+    // option is received with a boolean true/false payload. A True payload activates face recognition, false 
+    // deactivates it. An empty string here disables this function so face recognition always runs. Use for 
+    // exmaple with with MMM-Pir with notification name 'MMM_PIR-SCREEN_POWERSTATUS' to only run face 
+    // recognition when screen is on.
     external_trigger_notification: '',
   },
 

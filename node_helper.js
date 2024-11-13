@@ -13,7 +13,6 @@ const NodeHelper = require('node_helper');
 const { PythonShell } = require('python-shell');
 const onExit = require('signal-exit');
 var pythonStarted = false;
-const startTime = Date.now(); // Maybe use to delay first fetch
 
 module.exports = NodeHelper.create({
   pyshell: null,
@@ -120,7 +119,8 @@ module.exports = NodeHelper.create({
       }
     }
 
-    // delay to allow python module and flask server to start before trying to send post
+    // Notification for triggering face recognition received. Only send to python subprocess
+    // if it has been started
     if (notification === this.config.external_trigger_notification && pythonStarted) {
       if (payload === true) {
         this.send_python_cmd('start');
